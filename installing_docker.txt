@@ -1,0 +1,12 @@
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04
+
+# Update the apt package index
+sudo apt-get update
+
+# Install packages to allow atp to use a repository over HTTPS:
+sudo apt-get install \
+     apt-transport-https \
+     ca-certificates \
+     curl \
+     gnupg-agent \
+     software-properties-common

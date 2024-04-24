@@ -1,0 +1,51 @@
+cd /sys/fs/cgroup/
+##################################################
+
+kav@bqp:/sys/fs/cgroup$ ls
+cgroup.controllers      cgroup.procs            cpu.pressure           dev-hugepages.mount  io.cost.qos    machine.slice     memory.stat                    sys-fs-fuse-connections.mount  system.slice
+cgroup.max.depth        cgroup.stat             cpuset.cpus.effective  dev-mqueue.mount     io.pressure    memory.numa_stat  misc.capacity                  sys-kernel-config.mount        user.slice
+cgroup.max.descendants  cgroup.subtree_control  cpuset.mems.effective  init.scope           io.prio.class  memory.pressure   misc.current                   sys-kernel-debug.mount
+cgroup.pressure         cgroup.threads          cpu.stat               io.cost.model        io.stat        memory.reclaim    proc-sys-fs-binfmt_misc.mount  sys-kernel-tracing.mount
+
+##################################################
+# Посмотреть список namespaces:
+root@bqp:~# lsns
+        NS TYPE   NPROCS   PID USER             COMMAND
+4026531834 time      385     1 root             /sbin/init splash
+4026531835 cgroup    385     1 root             /sbin/init splash
+4026531836 pid       383     1 root             /sbin/init splash
+4026531837 user      348     1 root             /sbin/init splash
+4026531838 uts       380     1 root             /sbin/init splash
+
+##################################################
+# Запустим bash в отдельном namespace:
+unshare --pid --net --mount-proc --fork bash
+
+# Теперь мы в другом namespace. Для того, чтобы убедиться в этом выведем список доступных namespace.
+# Мы видим только наши namespaces, мы не видим системных.
+lsns
+        NS TYPE   NPROCS PID USER COMMAND
+4026531834 time        2   1 root bash
+4026531835 cgroup      2   1 root bash
+4026531837 user        2   1 root bash
+4026531838 uts         2   1 root bash
+4026531839 ipc         2   1 root bash
+4026534956 mnt         2   1 root bash
+4026534957 pid         2   1 root bash
+4026534958 net         2   1 root bash
+
+##################################################
+Docker использует следующие возможности Linux:
+  --> namespaces - технология, позволяющая изолировать:
+        сеть
+        процесс
+        межпроцессорное взаимодействие
+        файловые системы
+        ядро ОС
+  --> cgroups - позволяет ограничивать контейнер по ресурсам (RAM, CPU, I/O)
+  --> UnionFS - тип файловой системы, позволяющий накладывать состояние файловой системы как слои: каждый последующий слой использует предыдущий в режиме Copy-on-write,
+      	        то есть хранит изменения только от предыдущего слоя. Основые поддерживаемые реализации: aufs, btrfs, overlay2.
+
+Важно отметить, что Docker подразумевает хранение образов в своем формате (libcontainer).
+На данный момент этот формат стал де-факто форматом образов.
+
