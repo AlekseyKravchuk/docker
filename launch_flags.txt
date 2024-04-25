@@ -1,0 +1,88 @@
+# Registry - хранилище образов, что-то типа github'a.
+hub.docker.com
+
+# Например, смотрим образ nginx на hub.docker.com:
+https://hub.docker.com/_/nginx
+
+# Выводим список всех ЗАПУЩЕННЫХ контейнеров:
+docker ps
+
+# Выводим список ВСЕХ контейнеров, т.е. даже тех, которые находятся в режиме STOPPED:
+docker ps -a
+
+# Посмотреть все images (snapshot'ы), которые у нас скачаны и присутствуют в системе локально:
+docker images
+
+# Скачать с hub.docker.com образ nginx. По умолчанию используется тег "latest":
+docker pull ubuntu:latest
+
+# Теперь хотим скачать образ ubuntu 16.04:
+docker pull ubuntu:16.04
+
+# Скачиваем образ nginx:
+docker pull nginx
+
+# "docker run -d ubuntu":
+  "-d"     : запуск в режиме демона
+  "ubuntu" : имя образа, который нужно запустить. После имени образа указываем КОМАНДУ, которую нужно запустить внутри этого контейнера.
+  	     Если команду не указать, то будет использована default-ная команда, которая использовалась при сборке этого образа
+docker run -d ubuntu sleep 30
+ef8d0a1479e8f69ec43b1b7c9cf3efa46288d745f44f9d9806f5e716c7e6748f
+
+# В ответ на команду запуска контейнера мы получаем ID запустившегося контейнера.
+# Если не указать имя запускаемого контейнера, то docker сам назначит произвольное имя.
+
+# Запускаем контейнер с указанием его имени:
+docker run -d --name my_container ubuntu sleep 30
+
+# Выводим список запущенных контейнеров:
+docker ps
+OUTPUT:
+kav@bqp:~/docker_learn$ docker ps
+CONTAINER ID   IMAGE     COMMAND      CREATED         STATUS         PORTS     NAMES
+442315efb45e   ubuntu    "sleep 30"   3 seconds ago   Up 3 seconds             my_container
+
+# Чтобы запустить остановленный контейнер даем команду "docker start" и ID остановленного контейнера:
+docker start 442315efb45e
+
+# Также для запуска ОСТАНОВЛЕННОГО контейнера можно испльзовать его имя:
+docker start my_container
+
+# Остановить контейнер:
+docker stop container_name
+docker stop container_ID
+
+# Когда docker запускает контейнер, он берет образ, распаковывает его и запускает контейнер из этого образа.
+
+# Удалить ранее запущенный и остановленный контейнер.
+docker rm my_container
+
+# Прибить исполняющийся контейнер:
+docker kill 3minutes_cont_sleep
+# или
+docker kill 9d51802c2772
+
+# Вывести имена ВСЕХ контейнеров через пробел:
+docker ps -a --format "{{.Names}}" | tr '\n' ' '; echo
+
+# Исполняющийся контейнер можно прибить одной командой - он сначала остановится, а потом удалится:
+docker rm -f container_name
+# ИЛИ
+docker rm -f container_ID
+
+# Удалить образ (image):
+docker rmi ubuntu:16.04
+
+############################## Создание файлов и сохранение их внутри контейнера ##############################
+# Мы можем заходить внутрь контейнера - для этого выполняем "docker exec -it container_name command"
+     "-it": от "interactive tty" - чтобы мы могли печатать на клавиатуре что-то и это что-то попадало в контейнер и чтобы результат обработки нам отображался
+
+# Пример
+docker exec -it web bash
+
+# Удалить все контейнеры
+docker ps -a --format "{{.Names}}" | tr '\n' ' ' | xargs docker rm
+
+# ==> TODO: 23:40 - монтирование папок
+# Указываем "-v", от "volume" для того, чтобы прокинуть папку "/data/", существующую на хосте в контейнер. Там она будет существовать как "/internal/":
+docker run -d --name web -v /data:/internal/ nginx
