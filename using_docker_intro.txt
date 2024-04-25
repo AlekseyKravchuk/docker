@@ -1,0 +1,85 @@
+########## Using the Docker Command ##########
+# Using docker consists of passing it a chain of options and commands followed by arguments. The syntax takes this form:
+# docker [option] [command] [arguments]
+
+# To view all available subcommands, type:
+docker
+
+####################################################################################################
+
+# Вывести список запущенных контейнеров:
+sudo docker ps
+OUTPUT:
+user@server:~$ sudo docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                     NAMES
+f7b25db5695e   nginx:stable   "/docker-entrypoint.…"   13 seconds ago   Up 11 seconds   127.0.0.1:28080->80/tcp   rbm-dkr-01
+
+# Запустить контейнер на порту 28080 из официального образа nginx: docker run -d -p 127.0.0.1:28080:80 --name rbm-dkr-01 nginx:stable
+docker run -d -p 127.0.0.1:28080:80 --name rbm-dkr-01 nginx:stable
+
+# Вывести список запущенных контейнеров:
+docker ps
+
+# Вывести приветственную страницу nginx с помощью утилиты curl:
+curl http://127.0.0.1:28080
+OUTPUT:
+user@server:~$ curl http://127.0.0.1:28080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+user@server:~$
+
+# Out of the box, without any command-line arguments, the curl command will fetch a file and display its contents to the standard output.
+OUTPUT:
+kav@vak:~/docker_learn$ curl https://www.digitalocean.com/robots.txt
+User-agent: GPTBot
+Disallow: /
+
+User-agent: *
+Disallow:
+
+Sitemap: https://www.digitalocean.com/sitemaps/community-tutorial-collections-0.xml.gz
+Sitemap: https://www.digitalocean.com/sitemaps/community-tutorials-0.xml.gz
+Sitemap: https://www.digitalocean.com/sitemaps/community-tutorial-series-0.xml.gz
+Sitemap: https://www.digitalocean.com/sitemaps/community-questions-0.xml.gz
+Sitemap: https://www.digitalocean.com/sitemaps/community-questions-1.xml.gz
+Sitemap: https://www.digitalocean.com/sitemaps/community-questions-2.xml.gz
+................................................................................
+ 
+# Остановить ранее запущенный контейнер:
+docker stop rbm-dkr-01
+
+# Убедиться, что список запущенных контейнеров пуст:
+docker ps
+OUTPUT:
+user@server:~$ sudo docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS
+
+# При помощи утилиты curl запрашиваем адрес http://127.0.0.1:28080
+# Мы должны получить ошибку, поскольку мы уже остановили контейнер и ничего не слушается на этом порту.
+user@server:~$ curl http://127.0.0.1:28080
+curl: (7) Failed to connect to 127.0.0.1 port 28080: Connection refused
+
+
+
+
