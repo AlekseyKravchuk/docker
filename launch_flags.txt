@@ -1,3 +1,15 @@
+# Изученные команды:
+docker run -d -p 127.0.0.1:28080 --name rbm-dkr-01 nginx:stable
+       -d: запустить в режиме демона
+       -p:
+       --name: имя, которое будет присвоено запускаемому из образа "nginx:stable" контейнеру (в данном случае будет присвоено имя "rbm-dkr-01")
+       
+docker ps     # вывести список запущенных контейнеров
+
+docker ps -a  # вывести список ВСЕХ контейнеров (в том числе остановленных)
+
+docker stop rbm-dkr-01
+
 # Registry - хранилище образов, что-то типа github'a.
 hub.docker.com
 
@@ -13,7 +25,7 @@ docker ps -a
 # Посмотреть все images (snapshot'ы), которые у нас скачаны и присутствуют в системе локально:
 docker images
 
-# Скачать с hub.docker.com образ nginx. По умолчанию используется тег "latest":
+# Скачать с hub.docker.com образ nginx. По умолчанию используется версия ПО с тегом "latest":
 docker pull ubuntu:latest
 
 # Теперь хотим скачать образ ubuntu 16.04:
@@ -32,8 +44,10 @@ ef8d0a1479e8f69ec43b1b7c9cf3efa46288d745f44f9d9806f5e716c7e6748f
 # В ответ на команду запуска контейнера мы получаем ID запустившегося контейнера.
 # Если не указать имя запускаемого контейнера, то docker сам назначит произвольное имя.
 
-# Запускаем контейнер с указанием его имени:
+# Запускаем контейнер с указанием его имени, а также указываем команду, которая должна выполниться в создаваемом контейнере (в данном примере - это "sleep 30"):
 docker run -d --name my_container ubuntu sleep 30
+
+# Если команду, которой следует выполниться в создаваемом контейнере, явно не указать, то будет выполнена команда по умолчанию (задается при создании контейнера)
 
 # Выводим список запущенных контейнеров:
 docker ps
@@ -62,27 +76,35 @@ docker kill 3minutes_cont_sleep
 # или
 docker kill 9d51802c2772
 
-# Вывести имена ВСЕХ контейнеров через пробел:
+# Вывести имена ВСЕХ контейнеров через пробел.
+# 'echo' в конце команды нужна для вывода новой строки (newline)
 docker ps -a --format "{{.Names}}" | tr '\n' ' '; echo
+
+# Удалить ВСЕ имеющиеся контейнеры:
+docker ps -a --format "{{.Names}}" | tr '\n' ' ' | xargs docker rm
 
 # Исполняющийся контейнер можно прибить одной командой - он сначала остановится, а потом удалится:
 docker rm -f container_name
 # ИЛИ
 docker rm -f container_ID
 
-# Удалить образ (image):
+# Удалить образ (image). Сначала нужно остановить и удалить те, контейнеры, которые используют этот образ. И только после этого удалять нужный образ.
 docker rmi ubuntu:16.04
 
-############################## Создание файлов и сохранение их внутри контейнера ##############################
-# Мы можем заходить внутрь контейнера - для этого выполняем "docker exec -it container_name command"
-     "-it": от "interactive tty" - чтобы мы могли печатать на клавиатуре что-то и это что-то попадало в контейнер и чтобы результат обработки нам отображался
+# Удалить все образа, КРОМЕ "nginx" И ""
+docker images | grep -v -e "nginx" -e "ubuntu" | awk 'NR>1{print $1}' | tr '\n' ' ' | xargs docker rmi
 
-# Пример
-docker exec -it web bash
+# Вывести идентификаторы интересующих нас образов ("ubuntu:latest" и "ubuntu:16.04"):
+docker images | grep -e "nginx" -e "ubuntu" | awk 'NR>1 {print $3}'
 
-# Удалить все контейнеры
-docker ps -a --format "{{.Names}}" | tr '\n' ' ' | xargs docker rm
+# Вывести идентификаторы интересующих нас образов ("ubuntu:latest" и "ubuntu:16.04") ЧЕРЕЗ пробел:
+docker images | grep -e "nginx" -e "ubuntu" | awk 'NR>1 {print $3}' | tr '\n' ' '; echo
 
-# ==> TODO: 23:40 - монтирование папок
-# Указываем "-v", от "volume" для того, чтобы прокинуть папку "/data/", существующую на хосте в контейнер. Там она будет существовать как "/internal/":
-docker run -d --name web -v /data:/internal/ nginx
+# Выводим список умующихся контейнеров (со статусом "exited"):
+kav@vak:~/docker_learn$ docker ps -a
+CONTAINER ID   IMAGE          COMMAND       CREATED         STATUS                     PORTS     NAMES
+c30b13519d5c   ubuntu         "sleep 30"    3 minutes ago   Exited (0) 3 minutes ago             test
+a4fe140b8cc0   ubuntu:16.04   "/bin/bash"   3 hours ago     Exited (0) 3 hours ago               my_ubuntu_16.04
+
+# Хотим получить continer ID для контейнера, развернутого из ubuntu:latest
+docker ps -a | grep -e "ubuntu " | awk '{print $1}'

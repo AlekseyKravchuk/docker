@@ -1,0 +1,24 @@
+# Запускаем контейнер с именем "web2" из образа nginx:
+docker run -d --name web2 nginx
+
+# Заходим внутрь запущенного контейнера:
+docker exec -it web2 bash
+
+# Обновляем список репозиториев внутри контейнера:
+apt update
+
+# Устанавливаем пакет "procps" (нас интересует утилита "ps") и "net-tools" ("ifconfig"):
+apt install procps
+
+# Пробросить порт 8080 (хостовый порт) на порт 80 (порт в контейнере)
+# host_port_8080 ==> docker_port_80
+# Т.е. всё, что придет на хостовый порт 8080 будет проброшено на порт 80 в контейнере
+docker run -d --name web -v /data_shared/:/internal/ -p 8080:80 nginx
+
+# Смотрим вывод "docker ps".
+# Видим, что порт 8080 прокинут со всех интерфейсов (0.0.0.0) на порт 80: "0.0.0.0:8080->80/tcp"
+root@vak:/data_shared# docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS                  NAMES
+d826b3556d3b   nginx     "/docker-entrypoint.…"   2 minutes ago   Up 2 minutes   0.0.0.0:8080->80/tcp   web
+
+# Теперь если мы на хосте возьмем IP-адрес и в адресной строке web-браузера введем X.X.X.X:8080, то получим приветственную страницу nginx.
