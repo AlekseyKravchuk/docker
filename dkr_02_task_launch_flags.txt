@@ -1,0 +1,47 @@
+# заходим на сервер по ssh:
+ssh user@128.199.56.171
+##############################
+# копируем конфигурационный файл nginx.conf с хоста на сервер по ssh:
+scp ./nginx.conf user@128.199.56.171:/home/user
+##############################
+# Запускаем контейнер nginx пока без port-forwarding, но монтируем volume:
+docker run -d \
+           --name rbm-dkr-02 \
+	   -v /home/user/nginx_shared:/internal/ \
+	   nginx:stable
+
+# Заходим внутрь контейнера:
+docker exec -it rbm-dkr-02 /bin/bash
+
+# Находясь внутри контейнера, копируем ВСЁ содержимое каталога /etc/nginx/ в каталог /internal/
+cp -R /etc/nginx/* /internal/
+
+# И удаляем в каталоге /internal/ дефолтный конф.файл "nginx.conf"
+rm nginx.conf
+
+# Грохаем текущий контейнер:
+docker rm -f rbm-dkr-02
+
+# Копируем скачанный с gitlab'а rebrain'a новый конфиг "nginx.conf" в каталог "/home/user/nginx_shared"
+sudo cp ~/Downloads/nginx.conf /home/user/nginx_shared
+
+# С чистой совестью запускаем контейнер из образа nginx:stable с необходимым пробросом портов:
+docker run -d \
+           -p 127.0.0.1:8889:80 \
+	   -v /home/user/nginx_shared:/etc/nginx/ \
+	   --name rbm-dkr-02\
+	   nginx:stable
+##############################
+# Проверяем работу nginx-сервера, обратившись к 127.0.0.1:8889 с помощью "curl":
+curl 127.0.0.1:8889
+OUTPUT:
+user@server:~/nginx_shared$ curl 127.0.0.1:8889
+Welcome to the training program RebrainMe: Docker!
+##############################
+# Выполнить подсчет md5sum конф.файла "nginx.conf" командой:
+docker exec -ti rbm-dkr-02 md5sum /etc/nginx/nginx.conf
+
+##############################
+# Посмотреть логи контейнера
+docker logs rbm-dkr-02
+##############################

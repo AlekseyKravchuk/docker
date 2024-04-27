@@ -82,7 +82,6 @@ docker ps -a --format "{{.Names}}" | tr '\n' ' '; echo
 
 # Удалить ВСЕ имеющиеся контейнеры:
 docker ps -a --format "{{.Names}}" | tr '\n' ' ' | xargs docker rm
-
 # Исполняющийся контейнер можно прибить одной командой - он сначала остановится, а потом удалится:
 docker rm -f container_name
 # ИЛИ
