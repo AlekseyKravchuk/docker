@@ -1,0 +1,30 @@
+# копируем конфигурационный файл nginx.conf с хоста на сервер по ssh:
+scp ./nginx.conf user@142.93.238.199:/home/user
+
+##############################
+
+# Создадим именованный VOLUME с именем "rbm-dkr-04-volume":
+docker volume create rbm-dkr-04-volume
+##############################
+
+# Посмотрим список доступных VOLUME'ов:
+docker volume ls
+##############################
+# Запустите контейнер со следующими параметрами:
+#    - должен работать в фоне,
+#    - слушает на хосте 127.0.0.1:8891,
+#    - имеет имя rbm-dkr-04,
+#    - должен пробрасывать скачанный вами конфигурационный файл внутрь контейнера как основной конфигурационный файл,
+#    - образ - nginx:stable,
+#    - в директорию с логами nginx должен быть подключен созданный вами Volume (Монтирование должно осуществляться в /var/log/nginx/external, иначе контейнер "упадёт" при старте)
+
+docker run -d \
+           --name rbm-dkr-04 \
+           --mount type=bind,source=/var/lib/docker/volumes/rbm-dkr-04-volume,destination=/var/log/nginx/external/ \
+           -v /home/user/nginx.conf:/etc/nginx/nginx.conf \
+           -p 127.0.0.1:8891:80 \
+           nginx:stable
+##############################
+
+# Выведите содержимое volume на хостовой системе, воспользовавшись командой ls -la.
+docker exec -it rbm-dkr-04 ls -al /var/log/nginx/external/

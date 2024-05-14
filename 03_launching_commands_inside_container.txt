@@ -1,0 +1,14 @@
+############################## DKR 03: Basics. Запуск команд внутри контейнеров ##############################
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+           -v /home/user/nginx.conf:/etc/nginx/nginx.conf \
+           --name rbm-dkr-03\
+           nginx:stable
+
+# With "docker exec -it {container_name} {command}" you can directly access your container and execute commands.
+# docker exec -it {container_name} {command}
+docker exec -it rbm-dkr-03 nginx -s reload
+
+# docker exec -it rbm-dkr-03 md5sum /etc/nginx/nginx.conf
+1265cde0fefb06a47f02b8c95cc892eb  /etc/nginx/nginx.conf
+ 

@@ -13,7 +13,10 @@ apt install procps
 # Пробросить порт 8080 (хостовый порт) на порт 80 (порт в контейнере)
 # host_port_8080 ==> docker_port_80
 # Т.е. всё, что придет на хостовый порт 8080 будет проброшено на порт 80 в контейнере
-docker run -d --name web -v /data_shared/:/internal/ -p 8080:80 nginx
+docker run -d \
+           --name web \
+           -v /data_shared/:/internal/ \
+           -p 8080:80 nginx
 
 # Смотрим вывод "docker ps".
 # Видим, что порт 8080 прокинут со всех интерфейсов (0.0.0.0) на порт 80: "0.0.0.0:8080->80/tcp"

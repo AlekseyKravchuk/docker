@@ -1,0 +1,100 @@
+# Запускаем контейнер "ubuntu:latest".
+# Пробрасываем файл "/home/kav/docker_learn/config" на HOST'е в файл "/app/config" внутри запущенного контейнера.
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+	   --name app \
+           -v /home/kav/docker_learn/config:/app/config \
+           ubuntu:latest \
+	   sleep infinity
+	   
+# Контейнер запустился:
+docker ps
+OUTPUT:
+CONTAINER ID   IMAGE           COMMAND            CREATED         STATUS         PORTS                    NAMES
+81125b1cdd73   ubuntu:latest   "sleep infinity"   3 seconds ago   Up 2 seconds   127.0.0.1:8890->80/tcp   app
+
+# Заходим внутрь контейнера и проверяем наличие файла "/app/config":
+docker exec -it app bash
+
+# Сейчас содержимое файла "/app/config" идентично содержимому файла на HOST'е.
+# Изменим файл "/app/config" из контейнера - запишем туда новое значение.
+echo "variable=container" > ./config
+
+# Убедимися, что на HOST'е содержимое файла также изменилось - его содержимое обновляется при внесении изменений на одной из сторон.
+
+# Теперь удалим файл "/home/kav/docker_learn/config" и создадим его заново на HOST'е с другим значением и посмотрим на поведение docker'a.
+# Как мы видим, связь с файлом из контейнера сломалась даже не смотря на то, что и путь, и имя самого файла остались неизменными (изменился только inode этого файла).
+# При перезапуске контейнера связь прокинутых файлов восстановится.
+# Однако некоторые сервисы могут быть критичны к restart'у.
+
+# Чтобы избежать такой ситуации, можно создать отдельный каталог на HOST'е и прокидывать не сам файл "/app/config", а весь каталог "/app/".
+# В этом случае можно беспрепятственно перезаписывать файл "/app/config", поскольку inode каталога, содержащего этот файл, не изменится.
+
+# Снова запускаем контейнер. Но на этот раз пробрасываем не сам файл, а каталог, в котором этот файл находится.
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+	   --name app \
+           -v /home/kav/docker_learn/app/:/app/ \
+           ubuntu:latest \
+	   sleep infinity
+
+# Теперь при удалении и пересоздании файла "/home/kav/docker_learn/app/config" с новым содержимым связь файлов сохранится.
+# Также если на HOST'е создать ещё один файл, например "new_file", он также станет виден внутри контейнера.
+
+############################## Именованные VOLUME'ы ##############################
+# Создадим именованный VOLUME:
+docker volume create data
+
+# Директория, в которой создаются Volumes, всегда одна - /var/lib/docker/volumes.
+
+# Посмотрим список доступных VOLUME'ов:
+docker volume ls
+OUTPUT:
+DRIVER    VOLUME NAME
+local     data
+local     rbm-dkr-04-volume
+
+# Посмотрим информацию по свежесозданному VOLUME:
+docker volume inspect data
+OUTPUT:
+[
+    {
+        "CreatedAt": "2024-05-10T01:25:11+03:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/data/_data",
+        "Name": "data",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
+# Удалим VOLUME "data":
+docker volume rm data
+
+# И снова его создадим:
+docker volume create data
+
+# Запустим контейнер:
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+           --name app \
+           -v data:/app/ \
+           ubuntu:latest \
+           sleep infinity
+
+# Удалим контейнер и убедимся в сохранности VOLUME "data"
+docker rm -f app
+
+# Запустим контейнер, прокинув в него данные в READ-ONLY
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+           --name app \
+           -v data:/app/:ro \
+           ubuntu:latest \
+           sleep infinity
+
+# Смотрим содержимое каталога "/app/" и пробуем изменить данные внутри файла.
+echo "addition to file_1" >> test_file_1.txt
+echo "addition to file_1" >> test_file_1.txt
+bash: test_file_1.txt: Read-only file system

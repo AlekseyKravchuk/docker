@@ -107,3 +107,5 @@ a4fe140b8cc0   ubuntu:16.04   "/bin/bash"   3 hours ago     Exited (0) 3 hours a
 
 # Хотим получить continer ID для контейнера, развернутого из ubuntu:latest
 docker ps -a | grep -e "ubuntu " | awk '{print $1}'
+
+

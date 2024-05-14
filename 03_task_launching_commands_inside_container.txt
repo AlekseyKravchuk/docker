@@ -1,0 +1,46 @@
+# копируем конфигурационный файл nginx.conf с хоста на сервер по ssh:
+scp ./nginx.conf user@209.38.36.111:/home/user
+
+##############################
+# Запустите контейнер со следующими параметрами:
+#   - должен работать в фоне,
+#   - слушает на хосте 127.0.0.1:8890,
+#   - имеет имя rbm-dkr-03,
+#   - должен пробрасывать скачанный вами конфигурационный файл внутрь контейнера как основной конфигурационный файл,
+#   -образ - nginx:stable.
+
+docker run -d \
+           -p 127.0.0.1:8890:80 \
+           -v /home/user/nginx.conf:/etc/nginx/nginx.conf \
+           --name rbm-dkr-03\
+           nginx:stable
+##############################
+
+# Проверьте работу, обратившись к 127.0.0.1:8890, - в ответ должно возвращать строку Welcome to the training program RebrainMe: Docker!
+curl 127.0.0.1:8890
+##############################
+
+# Выполните команду:
+docker exec -it rbm-dkr-03 md5sum /etc/nginx/nginx.conf
+
+user@server:~$ docker exec -it rbm-dkr-03 md5sum /etc/nginx/nginx.conf
+e70dedb61d0c305b855088ca7bf3742a  /etc/nginx/nginx.conf
+##############################
+
+# Скачайте новый конфигурационный файл nginx.
+
+# Измените проброшенный конфигурационный файл, размещенный на хостовой системе, на новый.
+
+# Выполните reload nginx без остановки контейнера при помощи команды exec.
+docker exec -ti rbm-dkr-03 nginx -s reload
+
+# История с reload'ом nginx'a почему-то не сработала, используем рестарт docker'a:
+docker restart rbm-dkr-03
+
+# Проверьте работу, обратившись к 127.0.0.1:8890, - в ответ должно возвращать строку Welcome to the training program RebrainMe: Docker! Again!
+curl 127.0.0.1:8890
+
+# Выполните команду:
+docker exec -ti rbm-dkr-03 md5sum /etc/nginx/nginx.conf
+OUTPUT:
+1265cde0fefb06a47f02b8c95cc892eb  /etc/nginx/nginx.conf

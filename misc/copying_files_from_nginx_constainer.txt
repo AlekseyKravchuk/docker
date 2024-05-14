@@ -1,14 +1,12 @@
-# заходим на сервер по ssh:
-ssh user@128.199.56.171
-##############################
-# копируем конфигурационный файл nginx.conf с хоста на сервер по ssh:
-scp ./nginx.conf user@128.199.56.171:/home/user
-##############################
-# Запускаем контейнер nginx пока без port-forwarding, но монтируем volume:
+;; This buffer is for text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with C-x C-f and enter text in its buffer.
+
+
+
 docker run -d \
            --name rbm-dkr-02 \
-	   -v /home/user/nginx_shared:/internal/ \
-	   nginx:stable
+           -v /home/user/nginx_shared:/internal/ \
+           nginx:stable
 
 # Заходим внутрь контейнера:
 docker exec -it rbm-dkr-02 /bin/bash
@@ -40,8 +38,3 @@ Welcome to the training program RebrainMe: Docker!
 ##############################
 # Выполнить подсчет md5sum конф.файла "nginx.conf" командой:
 docker exec -ti rbm-dkr-02 md5sum /etc/nginx/nginx.conf
-
-##############################
-# Посмотреть логи контейнера
-docker logs rbm-dkr-02
-##############################
