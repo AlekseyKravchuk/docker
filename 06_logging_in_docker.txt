@@ -1,0 +1,79 @@
+Как docker запускает приложения?
+Docker требует, чтобы процесс был запущен в FOREGROUND'e (не в background'e), иными словами процесс не должен отвязываться от выводов stdout и stderror.
+
+# Просто запускаем nginx:
+docker run -d \
+           -p 8080:80 \
+           --name web \
+           nginx:stable
+
+# Запрашиваем welcome-страницу.
+curl http://127.0.0.1:8080
+
+# Или через web-браузер:
+http://127.0.0.1:8080/
+
+# Смотрим логи docker-контейнера с именем "web":
+docker logs web
+
+# Или так:
+docker logs $(docker ps -q)
+
+# Где же docker хранит эти логи?
+
+# Удалим наш текущий контейнер:
+docker rm -f web
+
+# И перепишем команду запуска:
+docker run -d \
+           -p 8080:80 \
+           --name web \
+	   --log-driver json-file \
+           nginx
+
+# Строка: "--log-driver json-file" является default-ной
+
+# Генерим 10 запросов на nginx-сервер с помощью curl:
+for i in $(seq 1 10); do curl http://127.0.0.1:8080; done
+
+# Переходим в каталог:
+cd /var/lib/docker/containers/<CONTAINER_ID>
+
+# И находим в нем файл:
+<CONTAINER_ID>-json.log
+
+# Содержимое этого файла как раз и выводит команда "docker logs <DOCKER_CONTAINER_NAME>"
+
+# Удалим запущенный контейнер:
+docker rm -f web
+
+# У json-драйвера тоже есть параметры - они передаются через опцию "--log-opt"
+
+# Запускаем nginx-контейнер настройкой logrotate:
+docker run -d \
+           -p 8080:80 \
+           --name web \
+	   --log-driver json-file \
+	   --log-opt max-file=3 \
+	   --log-opt max-size=1k \
+           nginx
+
+# Если мы перейдем в 
+/var/lib/docker/containers/3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a
+# где "3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a" - это ID контейнера
+
+# И выведем содержимое текущего каталога, то увидим уже 3 лог-файла вместо одного:
+-rw-r----- 1 root root 1023 июн  3 16:41 3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a-json.log
+-rw-r----- 1 root root 1023 июн  3 16:41 3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a-json.log.1
+-rw-r----- 1 root root 1090 июн  3 16:41 3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a-json.log.2
+
+# Теперь отправим 10 запросов на nginx:
+for i in $(seq 1 10); do curl http://127.0.0.1:8080; done
+
+# Сейчас мы будем отправлять наши логи на центральный web-сервер.
+
+# Graylog - централизованная система сбора логов.
+# Graylog — это платформа управления логами. Graylog использует 2 компонента: 1) Elasticsearch для хранения самих логов, и 2) MongoDB для хранения аутентификационных данных
+# (чтобы можно было залогиниться и назначать пользователям права - т.е. определять, какие логи они смогут увидеть, а какие - нет) и конфигурации.
+# Graylog поддерживает специальный формат логов - GELF (Graylog extended log format).
+
