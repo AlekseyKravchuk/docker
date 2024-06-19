@@ -1,7 +1,60 @@
 Как docker запускает приложения?
 Docker требует, чтобы процесс был запущен в FOREGROUND'e (не в background'e), иными словами процесс не должен отвязываться от выводов stdout и stderror.
+Docker НЕ ЗАПУСКАЕТ процессы в режиме демона!!! Это означает, что docker будет "держать" консоль, не отвязываясь от выводов stdout и stderror.
 
-# Просто запускаем nginx:
+# Устанавливаем nginx:
+sudo apt install nginx
+
+# Запустим nginx в режиме демона:
+systemctl start nginx
+
+# nginx пишет логи в "/var/log/nginx/"
+cd /var/log/nginx
+ls -al
+OUTPUT:
+-rw-r----- 1 www-data adm       0 июн 19 12:39 access.log
+-rw-r----- 1 www-data adm      78 июн 19 12:39 error.log
+
+
+# Отправляем 10 запросов на ЛОКАЛЬНЫЙ nginx-сервер с помощью curl:
+for i in $(seq 1 10); do curl http://127.0.0.1:80; done
+
+# Или отправляем по одному запросу за раз с помощью браузера: 127.0.0.1:80
+# В результате размер файла "access.log" увеличивается (на каждый запрос добавляется 1 строка в файл).
+
+# Останавливаем nginx:
+sudo systemctl stop nginx
+
+# Запускаем nginx НЕ в режиме демона (в FOREGROUND):
+nginx -g 'daemon off;'
+
+# В результате видим, что nginx единолично захватил консоль (консоль не отвязалась)
+# Но при этом, когда мы обновляем страницу в браузере (или используем curl), логи в stdout мы не наблюдаем.
+
+# Как нам заставить nginx писать в STDOUT?
+# По умолчанию nginx это делать не умеет.
+# Хак:
+# 1) переходим в /var/log/nginx
+# 2) удаляем там "access.log"
+# 3) делаем symlink с одноименным именем: ln -s /dev/stdout access.log
+OUTPUT of $(ls -a)
+lrwxrwxrwx 1 root     root     11 июн 19 13:04 access.log -> /dev/stdout
+# Таким образом, nginx сейчас пишет логи в STDOUT и запущен НЕ в режиме демона.
+
+# Чтобы docker мог управлять логами приложения, приложение должно писать свои логи в STDOUT и в STDERROR.
+# Останавливаем nginx:
+sudo systemctl stop nginx
+
+# И удаляем его:
+sudo apt purge nginx
+
+# Также удаляем /var/log/nginx:
+sudo rm -rf /var/log/nginx/
+
+# Удаляем ранее использовавшиеся контейнеры (если таковые имеются):
+docker rm -f $(docker ps -aq)
+
+# Просто запускаем nginx в docker-контейнере:
 docker run -d \
            -p 8080:80 \
            --name web \
@@ -13,10 +66,11 @@ curl http://127.0.0.1:8080
 # Или через web-браузер:
 http://127.0.0.1:8080/
 
-# Смотрим логи docker-контейнера с именем "web":
+# Смотрим логи docker-контейнера с именем "web" или ID = 0210e11ede96:
 docker logs web
 
 # Или так:
+docker logs 0210e11ede96
 docker logs $(docker ps -q)
 
 # Где же docker хранит эти логи?
@@ -24,7 +78,7 @@ docker logs $(docker ps -q)
 # Удалим наш текущий контейнер:
 docker rm -f web
 
-# И перепишем команду запуска:
+# И перепишем команду запуска (добавим опцию "--log-driver json-file"):
 docker run -d \
            -p 8080:80 \
            --name web \
@@ -38,15 +92,16 @@ for i in $(seq 1 10); do curl http://127.0.0.1:8080; done
 
 # Переходим в каталог:
 cd /var/lib/docker/containers/<CONTAINER_ID>
+cd /var/lib/docker/containers/ad5efd31d191f85bc7f91974c5c70065d3443e9f6f597362938c559418ade810
 
 # И находим в нем файл:
 <CONTAINER_ID>-json.log
+ad5efd31d191f85bc7f91974c5c70065d3443e9f6f597362938c559418ade810-json.log
 
 # Содержимое этого файла как раз и выводит команда "docker logs <DOCKER_CONTAINER_NAME>"
 
 # Удалим запущенный контейнер:
 docker rm -f web
-
 # У json-драйвера тоже есть параметры - они передаются через опцию "--log-opt"
 
 # Запускаем nginx-контейнер настройкой logrotate:
@@ -60,6 +115,7 @@ docker run -d \
 
 # Если мы перейдем в 
 /var/lib/docker/containers/3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a
+/var/lib/docker/containers/99442df46854f4fca9ff2a1269d187903357a459d80a0733558ba547483ec350
 # где "3af6471e284727b952d059f43549070c79db084ae379cb039909e70a6d9c3a7a" - это ID контейнера
 
 # И выведем содержимое текущего каталога, то увидим уже 3 лог-файла вместо одного:
@@ -77,3 +133,4 @@ for i in $(seq 1 10); do curl http://127.0.0.1:8080; done
 # (чтобы можно было залогиниться и назначать пользователям права - т.е. определять, какие логи они смогут увидеть, а какие - нет) и конфигурации.
 # Graylog поддерживает специальный формат логов - GELF (Graylog extended log format).
 
+12:29/32:23
