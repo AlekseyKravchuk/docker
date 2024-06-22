@@ -1,0 +1,102 @@
+Задание:
+// ==================================================
+1.Запустите контейнер со следующими параметрами:
+    - должно работать в фоне,
+    - слушает на хосте 127.0.0.1:8892,
+    - имеет имя rbm-dkr-06-local,
+    - образ - nginx:stable,
+    - логи должны использовать драйвер local и объем файла лога не должен превышать 10 MiB.
+// **********
+docker run -d \
+           -p 127.0.0.1:8892:80 \
+           --name rbm-dkr-06-local \
+           --log-driver local \
+           --log-opt max-size=10m \
+           nginx:stable
+// ==================================================
+2. Выведите список запущенных контейнеров.
+// **********
+docker ps
+// ==================================================
+3. Один раз обратитесь к запущенному nginx, чтобы были записаны логи (например, curl --silent http://127.0.0.1:8892 > /dev/null).
+// **********
+curl --silent http://127.0.0.1:8892 > /dev/null
+curl http://127.0.0.1:8892
+// ==================================================
+4. Выполните вывод содержимого файла на хостовой системе, в который записаны логи контейнера.
+# В хостовой системе логи хранятся в директории контейнера.
+# То есть в /var/lib/docker/containers/$CONTAINER_ID/$CONTAINER_ID-json.log.
+
+# Получаем ID нашего контейнера
+docker inspect --format="{{.Id}}" rbm-dkr-06-local
+
+# Записываем этот ID в переменную "CONTAINER_ID_LOCAL"
+CONTAINER_ID_LOCAL=$(docker inspect --format="{{.Id}}" rbm-dkr-06-local)
+
+# Проверяем значение переменной $CONTAINER_ID_LOCAL
+echo $CONTAINER_ID_LOCAL
+
+# Собственно выводим содержимое файла, в который записаны логи контейнера "rbm-dkr-06-local":
+cat /var/lib/docker/containers/"${CONTAINER_ID_LOCAL}"/local-logs/container.log
+
+# Если бы использовали json-драйвер, то команда была бы следующая:
+cat /var/lib/docker/containers/db5ae3b0cad642b4de383bf316546f0166b899eed21ea66a35a0904844210b72/local-logs
+// **********
+5. Настройте глобальное сохранение логов с драйвером local и объемом логов в 10 MiB через файл /etc/docker/daemon.json:
+/etc/docker/daemon.json
+{
+  "log-driver": "local",
+  "log-opts": {
+    "max-size": "10m"
+  }
+}
+
+# Чтобы записать содержимое в файл используем следующую конструкцию (https://stackoverflow.com/questions/11322807/echo-multiple-lines-into-a-file):
+cat > /path/to/newFile.text<< EOF
+some text line 1
+some text line 2
+some text line 3
+EOF
+
+# Применительно к нашей задаче:
+cat > /etc/docker/daemon.json << EOF
+{
+  "log-driver": "local",
+  "log-opts": {
+    "max-size": "10m"
+  }
+}
+EOF
+// **********
+6. Запустите контейнер со следующими параметрами:
+    - должно работать в фоне,
+    - слушает на хосте 127.0.0.1:8893,
+    - имеет имя rbm-dkr-06-global,
+    - образ - nginx:stable,
+    - в команде запуска НЕ должны присутствовать параметры драйвера.
+docker run -d \
+           -p 127.0.0.1:8893:80 \
+           --name rbm-dkr-06-global \
+           nginx:stable
+// **********
+7. Выведите список запущенных контейнеров
+docker ps
+// **********
+8. Один раз обратитесь к запущенному nginx, чтобы были записаны логи (например, curl --silent http://127.0.0.1:8893 > /dev/null).
+curl --silent http://127.0.0.1:8893 > /dev/null
+// **********
+9. Выполните вывод содержимого файла на хостовой системе, в который записаны логи контейнера.
+# Получаем ID нашего контейнера "rbm-dkr-06-global":
+docker inspect --format="{{.Id}}" rbm-dkr-06-global
+
+# Записываем этот ID в переменную "CONTAINER_ID_GLOBAL"
+CONTAINER_ID_GLOBAL=$(docker inspect --format="{{.Id}}" rbm-dkr-06-global)
+
+# Проверяем содержимое переменной $CONTAINER_ID_GLOBAL:
+echo $CONTAINER_ID_GLOBAL
+# Собственно выводим содержимое файла, в который записаны логи контейнера "rbm-dkr-06-global":
+cat /var/lib/docker/containers/"${CONTAINER_ID_GLOBAL}"/local-logs/container.log
+
+cat /var/lib/docker/containers/"${CONTAINER_ID_GLOBAL}"/"${CONTAINER_ID_GLOBAL}"-json.log
+// **********
+10. Отправьте решение на проверку.

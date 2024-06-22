@@ -74,6 +74,7 @@ docker logs 0210e11ede96
 docker logs $(docker ps -q)
 
 # Где же docker хранит эти логи?
+В хостовой системе логи хранятся в директории контейнера — в /var/lib/docker/containers/$CONTAINER_ID/$CONTAINER_ID-json.log.
 
 # Удалим наш текущий контейнер:
 docker rm -f web
@@ -133,4 +134,5 @@ for i in $(seq 1 10); do curl http://127.0.0.1:8080; done
 # (чтобы можно было залогиниться и назначать пользователям права - т.е. определять, какие логи они смогут увидеть, а какие - нет) и конфигурации.
 # Graylog поддерживает специальный формат логов - GELF (Graylog extended log format).
 
-12:29/32:23
+
+The default location of the configuration file on Linux is /etc/docker/daemon.json. Use the --config-file flag to specify a non-default location.
