@@ -52,7 +52,7 @@ docker run -d --name my_container ubuntu sleep 30
 # Выводим список запущенных контейнеров:
 docker ps
 OUTPUT:
-kav@bqp:~/docker_learn$ docker ps
+tor@pc:~/docker_learn$ docker ps
 CONTAINER ID   IMAGE     COMMAND      CREATED         STATUS         PORTS     NAMES
 442315efb45e   ubuntu    "sleep 30"   3 seconds ago   Up 3 seconds             my_container
 

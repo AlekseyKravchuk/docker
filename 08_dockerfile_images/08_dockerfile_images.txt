@@ -1,0 +1,234 @@
+# Контейнер - это развернутая из образа виртуальная среда с самим приложением.
+# Но развернутое окружение не является полноценной вируальной средой.
+# Для запуска необходим ПРОЦЕСС, вокруг которого и разворачивается всё остальное.
+
+# 1. Контейнер запускается вокруг некоторого процесса.
+# 2. В каждом контейнере есть свой процесс с pid 1.
+# 3. Состояние корневого процесса = состояние контейнера.
+
+# КОРНЕВОЙ процесс назначается либо при создании образа, либо при запуске контейнера
+
+# Из описанного выше вытекает главное правило:
+# ОДИН КОНТЕЙНЕР ===> ОДИН СЕРВИС
+
+# Запустим контейнер из образа с Ubuntu:
+docker run -d \
+           --name ubuntu_devupsen\
+           ubuntu:latest
+
+# Контейнер запустился. Посмотрим его текущее состояние:
+docker ps
+
+# Контейнер упал сразу после запуска.
+# Давайте разбираться, почему это произошло.
+# В выводе команды $(docker ps -a) есть столбец "COMMAND", в котором отображается корневой процесс контейнера.
+# В данном случае корневым процессом контейнера "ubuntu_devupsen" является "bash".
+# Получается, что контейнер был запущен в "detach"-режиме и сессия "bash" завершилась сразу при запуске.
+# Если же запустить контейнер в интерактивном режиме, то он будет доступен на всё время работы в нём.
+# Запустим еще один контейнер, но уже в ИНТЕРАКТИВНОМ режиме.
+# Флаг '-t' выделяет pts, виртуальный pts (сессию терминала), который подключен к потоку ввода контейнера.
+# Флаг '-i' запускает контейнер в ИНТЕРАКТИВНОМ режиме.
+docker run -ti \
+           --name ubuntu_devupsen_INTERACTIVE \
+           ubuntu:latest
+
+# В этом случае мы сразу попадаем внутрь контейнера, т.е. в среду выполнения. Выполним некоторые команды.
+# Но как только мы выходим из контейнера, он сразу же падает.
+
+# Теперь попробуем заменить корневой??? процесс контейнера.
+# Запустим контейнер в фоновом режеме и сделаем команду "sleep" корневым процессом, чтобы контейнер упал не сразу, а через "n" секунд.
+docker run -d \
+           --name ubuntu_devupsen_INTERACTIVE_SLEEP \
+           ubuntu:latest \
+           sleep 10
+
+# В выводе теперь видим, что корневым процессом является "sleep". Как только 10 секунд истекут, контейнер завершит свое выполнение (после завершения команды "sleep 10").
+tor@pc:~/docker_learn$ docker ps
+CONTAINER ID   IMAGE           COMMAND      CREATED         STATUS         PORTS     NAMES
+94b5470d626f   ubuntu:latest   "sleep 10"   4 seconds ago   Up 4 seconds             ubuntu_devupsen_INTERACTIVE_SLEEP
+
+# В выводе "docker ps" не всегда умещается полный путь в столбце "COMMAND".
+# "docker inspect container_name" дает более полную информацию в формате JSON.
+
+# Теперь запустим контейнер и посмотрим на процессы хостовой системы.
+docker run -d \
+           --name ubuntu_devupsen_RUN \
+           ubuntu:latest \
+           sleep infinity
+
+# Посмотрим процессы на хостовой системе
+ps ax | grep "container"
+tor@pc:~$ ps ax | grep "container"
+   1656 ?        Ssl    0:02 /usr/bin/containerd
+   2665 ?        Ssl    0:01 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+  18893 ?        Sl     0:00 /usr/bin/containerd-shim-runc-v2 -namespace moby -id 994bb6d86b9ac26c7dc29f2b713a90bff65cfc5ed09d97014ea1c3f5a2faaa29 -address /run/containerd/containerd.sock
+  19238 pts/5    S+     0:00 grep --color=auto container
+
+# Нас интересует следующая строка:
+  18893 ?        Sl     0:00 /usr/bin/containerd-shim-runc-v2 -namespace moby -id 994bb6d86b9ac26c7dc29f2b713a90bff65cfc5ed09d97014ea1c3f5a2faaa29 -address /run/containerd/containerd.sock
+# В частности идентификатор "994bb6d86b9ac26c7dc29f2b713a90bff65cfc5ed09d97014ea1c3f5a2faaa29", который там фигурирует.
+
+# Выведем полный идентификатор контейнера "ubuntu_devupsen_RUN":\
+docker inspect --format="{{.Id}}" ubuntu_devupsen_RUN
+994bb6d86b9ac26c7dc29f2b713a90bff65cfc5ed09d97014ea1c3f5a2faaa29
+
+# Если убить "shim", то контейнер "ubuntu_devupsen_RUN" будет завершен с НЕнулевым кодом возврата:
+sudo kill 18893
+
+# При этом нужно понимать, что использовать "kill -9" НИ В КОЕМ СЛУЧАЕ НЕЛЬЗЯ, т.к. упадет ВЕСЬ СЕРВИС DOCKER'а!
+
+tor@pc:~/docker_learn$ docker ps -a
+CONTAINER ID   IMAGE           COMMAND                  CREATED             STATUS                         PORTS     NAMES
+994bb6d86b9a   ubuntu:latest   "sleep infinity"         15 minutes ago      Exited (137) 11 seconds ago              ubuntu_devupsen_RUN
+
+# Видим ненулевой код завершения: 137
+
+# Проверяем, что процесс убит
+ps ax | grep 18893
+ps ax | grep "container"
+
+
+# Docker дает возможность при запуске контейнера указать поведение в случае падения сервиса с помощью флага "--restart".
+# Существует 4 политики restart'а:
+docker run --restart=no image              # политика restart'а по умолчанию
+docker run --restart=on-failure[:n] image  # перезапуск контейнера в случае кода выхода, отличного от нуля (т.е. restart будет если  сервис упал с ошибкой, а не был остановлен)
+docker run --restart=always image          #
+docker run --restart=unless-stopped        #
+
+# Запустим контейнер с опцией "--restart=on-failure:3" - перезапуск, если сервис упал с ошибкой
+docker run -d \
+           --name ubuntu_devupsen_RUN \
+           --restart=on-failure:3 \
+           ubuntu:latest \
+           sleep infinity
+# Если убить вручную его процесс "shim", то произойдет его рестарт.
+
+# Получаем CONTAINER ID(в сокращенном виде) по имени контейнера:
+docker ps -a | grep ubuntu_devupsen_RUN | awk '{print $1}'
+
+# Или же можно получить PID в полном виде:
+docker inspect --format="{{.Id}}" ubuntu_devupsen_RUN
+
+# Получаем pid процесса "shim" по ID контейнера:
+ps aux | grep $(docker ps -a | grep ubuntu_devupsen_RUN | awk '{print $1}')
+
+ps ax | grep $(docker ps -a | grep ubuntu_devupsen_RUN | awk '{print $1}')
+  27468 ?        Sl     0:00 /usr/bin/containerd-shim-runc-v2 -namespace moby -id e20dcca337559abbca39165b75c5f7e6aad027cb9270f6ae2ae50c71f8de0432 -address /run/containerd/containerd.sock
+  30571 pts/3    S+     0:00 grep --color=auto e20dcca33755
+
+# С помощью "docker inspect ubuntu_devupsen_RUN" мы можем получить более подробную информацию:
+docker inspect ubuntu_devupsen_RUN
+
+# Например:
+"RestartCount": 0, # Это довольно полезный параметр, поскольку позволяет определить, насколько правильно работает наш контейнер.
+
+# Также в выводе "docker inspect" можно найти информацию о политике рестарта:
+"RestartPolicy": {
+    "Name": "on-failure",
+    "MaximumRetryCount": 3
+},
+
+
+# Политика "docker run --restart=always" гарантирует перезапуск контейнера независимо от причины падения:
+docker run -d \
+           --name ubuntu_devupsen_RUN \
+           --restart=always \
+           ubuntu:latest \
+           sleep 5
+
+# Теперь контейнер будет перезапускаться каждые 5 секунд. Даже в случае перезапуска самого сервиса "docker" с ручной остановкой контейнера перед этим.
+
+# Запустим контейнер снова:
+docker run -d \
+           --name ubuntu_devupsen_RUN \
+           --restart=always \
+           ubuntu:latest \
+           sleep infinity
+
+# Перезапустим сам демон docker'а:
+systemctl restart docker
+
+# В выводе видим, что после запуска демона "docker" наш контейнер был снова перезапущен:
+docker ps
+CONTAINER ID   IMAGE           COMMAND            CREATED          STATUS        PORTS     NAMES
+5585f1e4f0b4   ubuntu:latest   "sleep infinity"   41 seconds ago   Up 1 second             ubuntu_devupsen_RUN
+
+# Запускаем с политикой "--restart=unless_stopped":
+docker run -d \
+           --name ubuntu_devupsen_RUN \
+           --restart=unless_stopped \
+           ubuntu:latest \
+           sleep infinity
+
+# Для стрессовой нагрузки контейнера нам нужно установить в него утилиту "stress".
+
+# Удаляем ранее использовавшиеся контейнеры (если таковые имеются):
+docker rm -f $(docker ps -aq)
+
+# Запускаем контейнер с ограничениями:
+docker run -d \
+           --name cpu \
+           --cpus=.7 \
+           ubuntu:latest \
+           sleep infinity
+
+# Заходим в контейнер:
+docker exec -ti cpu bash
+
+# Обновляем пакеты и устанавливаем "stress":
+apt update && apt install -y stress
+
+# Запустим утилиту "stress":
+stress --cpu 1
+
+# Стресс-тестирование началось. Посмотрим вывод команды "docker stats".
+# Она используется для получения информации об использовании ресурсов контейнера.
+docker stats
+CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O         BLOCK I/O         PIDS
+2b9deb341c54   cpu       69.76%    25.81MiB / 62.71GiB   0.04%     34MB / 1.18MB   26.6MB / 85.8MB   4
+
+# Видно, что под стрессовой нагрузкой с учетом нашего лимита по CPU, загруженность процесоора в среднем 70%.
+# При этом на хостовой системе это никак не заметно.
+
+# Удалим ранее созданный контейнер
+docker rm -f $(docker ps -q)
+
+# Теперь запустим контейнер с ограничением по памяти. И той же утилитой "stress" нагрузим её.
+docker run -d \
+           --name MEMORY \
+           --memory 200m \
+           ubuntu:latest \
+           sleep infinity
+
+# Контейнер "MEMORY" запустился, заходим внутрь:
+docker exec -ti MEMORY bash
+
+# Обновляем пакеты и устанавливаем "stress":
+apt update && apt install -y stress
+
+# Запускаем утилиту stress:
+stress --vm 1 --vm-bytes 190M
+
+# В другом экземпляре bash проверяем результат:
+docker stats
+
+####################################################################################################
+############################## Сборка образа ##############################                              
+# копируем конфигурационный файл nginx.conf с хоста на сервер по ssh:
+scp ./nginx.conf user@64.227.68.170:/home/user
+scp ./Dockerfile user@64.227.68.170:/home/user
+
+# Подробности команды "docker build -t nginx:1.0 ./"
+    1) -t is for tagging the image.
+    2) nginx is the name of the image.
+    3) 1.0 is the tag name. If you don’t add any tag, it defaults to the tag named latest.
+    4) ./ (dot slash) at the end means, we are referring to the Dockerfile location as the docker build context. That is our current directory.
+
+# После копирования nginx.conf и Dockerfile на удаленном сервере запускаем:
+docker build -t nginx:rbm-dkr-08 ./
+
+# Запускаем контейнер из собранного нами образа:
+docker run -d \
+           -p 127.0.0.1:8900:80 \
+           --name FROM_MY_IMAGE \
+           nginx:rbm-dkr-08
