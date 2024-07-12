@@ -24,10 +24,13 @@ RUN apt-get update && \
 #     adduser --system rbruser --group app
 
 # #################### COPY ###################
-# Use the COPY instruction to copy local files from the HOST machine to the current working directory.
+# Use the COPY instruction to copy local files from the HOST machine to the IMAGE (current working directory).
 # I.e.copy "nginx.conf" from directory with docker-project from the HOST machine to docker image
 # COPY --chown=rbruser:nginx_app nginx.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Or using WORKDIR:
+# COPY nginx.conf .
 
 # If you want to copy all the files from the host’s current directory to the container’s current directory, you can use the below command:
 # COPY . .

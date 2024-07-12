@@ -15,7 +15,6 @@ OUTPUT:
 -rw-r----- 1 www-data adm       0 июн 19 12:39 access.log
 -rw-r----- 1 www-data adm      78 июн 19 12:39 error.log
 
-
 # Отправляем 10 запросов на ЛОКАЛЬНЫЙ nginx-сервер с помощью curl:
 for i in $(seq 1 10); do curl http://127.0.0.1:80; done
 

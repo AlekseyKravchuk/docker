@@ -1,0 +1,32 @@
+# 1) Создайте файл /home/user/Dockerfile, который
+#     - собирает из образа nginx, версия которого параметризуется через аргумент ARG с именем NG_VERSION;
+#     - устанавливает переменную окружения ENV с таким же именем NG_VERSION значение которой берется из ARG;
+#     - создает файл /opt/$ARG_FILE, где значение переменной передается через ARG, но не сохраняется в ENV.
+
+# Инструкция ARG назначает переменные окружения(build-time variables) НА МОМЕНТ СБОРКИ ОБРАЗА.
+# Эти переменные окружения можно переопределить в момент запуска команды сборки образа.
+# Инструкция ARG позволяет параметризировать Dockerfile для разных версий образа.
+
+ARG NG_VERSION=latest
+FROM nginx:${NG_VERSION}
+ARG ARG_FILE=default_file_name
+
+LABEL maintainer="Aleksey Kravchuk"
+# WORKDIR /home/user/
+
+RUN apt-get update && \
+    apt-get install -y -q curl gnupg2
+RUN curl http://nginx.org/keys/nginx_signing.key | apt-key add -
+
+RUN apt-get update && \
+    apt-get install -y -q nginx
+
+RUN touch /opt/${ARG_FILE}
+RUN echo "some content for my file" > /opt/${ARG_FILE}
+
+# Инструкция ENV определяет переменные окружения в контейнере, которые МОЖНО ПЕРЕОПРЕДЕЛИТЬ при его запуске.
+# Эти переменные окружения НЕ ДОСТУПНЫ в момент сборки образа, а доступны ТОЛЬКО в момент ВЫПОЛНЕНИЯ КОНТЕЙНЕРА.
+ENV NG_VERSION=$NG_VERSION
+
+CMD ["nginx", "-g", "daemon off;"]
+
