@@ -38,7 +38,11 @@ docker history gocalc-multistage
 
 6) Запушьте результаты задания в репозиторий dkr-14-gocalc в свою группу в разделе практикума docker
    (они пригодятся в последующих заданиях gitlab.rebrainme.com/docker_users_repos/ID_ВАШЕГО_ПОЛЬЗОВАТЕЛЯ_В_GITLAB)
-# Пробовал 2 следующие команды
+ # Необходима предварительно авторизация:
+docker login registry.rebrainme.com
+docker build -t registry.rebrainme.com/docker_users_repos/6124/dkr-14-gocalc .
+docker push registry.rebrainme.com/docker_users_repos/6124/dkr-14-gocalc
+
 git push https://gitlab.rebrainme.com/docker_users_repos/6124/dkr-14-gocalc
 
 7) Отправьте решение на проверку.
