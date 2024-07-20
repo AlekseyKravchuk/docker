@@ -1,9 +1,9 @@
 # Запускаем контейнер "ubuntu:latest".
-# Пробрасываем файл "/home/kav/docker_learn/config" на HOST'е в файл "/app/config" внутри запущенного контейнера.
+# Пробрасываем файл "/home/user/docker_learn/config" на HOST'е в файл "/app/config" внутри запущенного контейнера.
 docker run -d \
            -p 127.0.0.1:8890:80 \
 	   --name app \
-           -v /home/kav/docker_learn/config:/app/config \
+           -v /home/user/docker_learn/config:/app/config \
            ubuntu:latest \
 	   sleep infinity
 	   
@@ -22,7 +22,7 @@ echo "variable=container" > ./config
 
 # Убедимися, что на HOST'е содержимое файла также изменилось - его содержимое обновляется при внесении изменений на одной из сторон.
 
-# Теперь удалим файл "/home/kav/docker_learn/config" и создадим его заново на HOST'е с другим значением и посмотрим на поведение docker'a.
+# Теперь удалим файл "/home/user/docker_learn/config" и создадим его заново на HOST'е с другим значением и посмотрим на поведение docker'a.
 # Как мы видим, связь с файлом из контейнера сломалась даже не смотря на то, что и путь, и имя самого файла остались неизменными (изменился только inode этого файла).
 # При перезапуске контейнера связь прокинутых файлов восстановится.
 # Однако некоторые сервисы могут быть критичны к restart'у.
@@ -34,11 +34,11 @@ echo "variable=container" > ./config
 docker run -d \
            -p 127.0.0.1:8890:80 \
 	   --name app \
-           -v /home/kav/docker_learn/app/:/app/ \
+           -v /home/user/docker_learn/app/:/app/ \
            ubuntu:latest \
 	   sleep infinity
 
-# Теперь при удалении и пересоздании файла "/home/kav/docker_learn/app/config" с новым содержимым связь файлов сохранится.
+# Теперь при удалении и пересоздании файла "/home/user/docker_learn/app/config" с новым содержимым связь файлов сохранится.
 # Также если на HOST'е создать ещё один файл, например "new_file", он также станет виден внутри контейнера.
 
 ############################## Именованные VOLUME'ы ##############################

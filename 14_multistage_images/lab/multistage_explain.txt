@@ -1,0 +1,56 @@
+# Перед созданием образа почистим систему:
+docker system prune -a
+
+# Также в докере есть аналитика использования дискового пространства в системе на хостовой системе:
+docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          2         1         851.7MB   822.3MB (96%)
+Containers      1         0         41B       41B (100%)
+Local Volumes   6         0         746.6MB   746.6MB (100%)
+Build Cache     27        0         117MB     117MB
+
+
+# Создаем образ на основе имеющегося Dockerfile:
+docker build \
+       -t not-multistage-example \
+       -f Dockerfile \
+       ./
+
+# Соберем исполняемый файл из исходного "hello.go":
+go build hello.go
+
+# Посмотрим размер получившегося исполняемого файла:
+ls -al --block-size=M hello
+-rwxrwxr-x 1 user user 2M июл 18 14:04 hello
+
+# Теперь посмотрим размер получившегося образа с нашим приложением:
+docker images
+REPOSITORY               TAG       IMAGE ID       CREATED          SIZE
+not-multistage-example   latest    e86fc20f1bfc   40 minutes ago   851MB
+
+# 2Mb vs 851Mb - хотелось бы сократить размер образа.
+
+# Запустим контейнер на основе только что собранного образа
+docker run -d \
+           --name cont_from_not_multistage \
+           not-multistage-example
+
+# По-хорошему, после успешного build'а необходимо удалить исходники, уже не используемые зависимости, включая сам компилятор языка.
+# Для этого в Docker есть возможность писать multistage-docerfiles, которые позволяют вынести сборку приложения в отдельный образ
+# и скопировать финальное собранное приложение в финальный образ.
+
+# Multistage-dockerfile выглядит следующим образом:
+# #################### Multistage-Dockerfile ####################
+# 1) Сначала необходимо описать образ для сборки приложения
+FROM golang:1.22.5-alpine:3.20 as builder
+WORKDIR /app
+COPY . .
+RUN go mod init && \
+    go mod tidy && \
+    go build main.go
+
+# 2) После этого нужно описать финальный образ, в котором приложение будет запущено
+FROM alpine:3.20 as final
+COPY --from=builder /app/main /main
+ENTRYPOINT ["/main"]
+################################################################

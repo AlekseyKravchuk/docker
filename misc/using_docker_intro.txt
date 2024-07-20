@@ -51,7 +51,7 @@ user@server:~$
 
 # Out of the box, without any command-line arguments, the curl command will fetch a file and display its contents to the standard output.
 OUTPUT:
-kav@vak:~/docker_learn$ curl https://www.digitalocean.com/robots.txt
+user@pc:~/docker_learn$ curl https://www.digitalocean.com/robots.txt
 User-agent: GPTBot
 Disallow: /
 

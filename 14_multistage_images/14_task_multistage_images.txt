@@ -1,0 +1,44 @@
+Задание:
+1) Склонируйте репозиторий gocalc.
+# git clone git@gitlab.rebrainme.com:docker-course-students/gocalc.git
+git clone https://gitlab.rebrainme.com/docker-course-students/gocalc.git
+
+2)Напишите и добавьте в репозиторий /home/user/gocalc/Dockerfile с Multi-stage build,
+  в котором сборка выполняется в одном образе (пусть это будет образ golang:1.22-alpine),
+  а исполнение в другом образе - alpine:3.19
+  -> В качестве базового Dockerfile можно использовать:
+########## Dockerfile_base ##########    
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY main.go .
+ENV GO111MODULE auto
+RUN  go mod init main && \
+     go mod tidy && \
+     go build
+#####################################
+  -> Для сборки бинарного файла используйте команду go build. Используя дополнительные флаги, задайте имя выходного файла "app"
+  -> В итоговом образе укажите директиву, для запуска вашего файла при старте контейнера
+  
+3) Соберите образ.
+# В папке "$dir_path" делаем 'git clone ... ' и добавляем в нее Dockerfile. Затем копируем всю папку на удаленный host:
+dir_path=$(pwd)
+scp -r "$dir_path" user@178.128.255.28:/home/user
+
+# Собираем образ:
+docker build \
+       -t gocalc-multistage \
+       -f Dockerfile \
+       ./
+
+4) Выведите список образов.
+docker images
+
+5) Изучите history собранного образа.
+docker history gocalc-multistage
+
+6) Запушьте результаты задания в репозиторий dkr-14-gocalc в свою группу в разделе практикума docker
+   (они пригодятся в последующих заданиях gitlab.rebrainme.com/docker_users_repos/ID_ВАШЕГО_ПОЛЬЗОВАТЕЛЯ_В_GITLAB)
+# Пробовал 2 следующие команды
+git push https://gitlab.rebrainme.com/docker_users_repos/6124/dkr-14-gocalc
+
+7) Отправьте решение на проверку.

@@ -1,0 +1,65 @@
+Задание:
+1) Создайте тестовый файл testfile, размером 10МБ при помощи команды
+dd if=/dev/zero of=./testfile bs=1M count=10
+
+2) Для выполнения задания будем использовать следующий Dockerfile: ./Dockerfile_starter
+scp ./Dockerfile_starter user@64.225.71.196:/home/user/
+
+3) Соберите образ на основе указанного Dockerfile с тэгом rbm-dkr-11:default (если будут проблемы со скачиванием пакетов, вам может помочь флаг --network=host)
+docker build \
+       -t rbm-dkr-11:default \
+       -f Dockerfile_starter \
+       ./
+
+# ПРИМЕЧАНИЕ #1:
+# To ensure that you're getting the latest versions of dependencies in your build, you can use the --no-cache option to avoid cache hits:
+docker build \
+       --no-cache \
+       -t rbm-dkr-11:default \
+       -f Dockerfile_starter \
+       ./
+       
+# ПРИМЕЧАНИЕ #2:
+# Removing intermediate images is normal. If you want to keep them you'll have to add --rm=false to your build command.
+docker build \
+       --no-cache \
+       --rm=false \
+       -t rbm-dkr-11:default \
+       -f Dockerfile_starter \
+       ./
+
+4) Используя команду docker inspect rbm-dkr-11:default внимательно изучите вывод команды, она позволяет получать дополнительную информацию об образе/контейнере.
+docker inspect rbm-dkr-11:default
+
+5) Используя команду docker history rbm-dkr-11:default --no-trunc изучите список слоёв в собранном контейнере
+docker history rbm-dkr-11:default --no-trunc
+Обратите внимание:
+5.1) У всех ли слоёв есть размер ?
+5.2) Изучите документацию и ответьте на вопрос, какие три директивы могут создавать слои (полезные ссылки "Best practices for writing Dockerfile", раздел "Minimize the number of layers" )
+5.3) Обратите внимание на директиву
+RUN chown user:user testfile
+=> посмотрите сколько она добавила в итоговый образ
+5.4) Используя команду docker images, оцените размер получившегося образа
+
+6) Внесите изменения в Dockerfile:
+6.1) Замените директиву RUN apt-get update -y && apt-get install nginx -y на
+RUN apt-get update -y && apt-get install nginx -y && rm -rf /var/lib/apt/lists/*
+
+6.2) Используя дополнительные флаги директивы COPY, назначьте пользователя user владельцем скопированных файлов
+COPY --chown=user:user testfile ./
+
+6.3) Уберите директиву RUN chown user:user testfile
+
+7. Соберите образ с тэгом rbm-dkr-11:optimized
+# Сперва копируем с хостовой машины модифицированный Dockerfile:
+scp ./Dockerfile_optimized user@64.225.71.196:/home/user/
+
+docker build \
+       -t rbm-dkr-11:optimized \
+       -f Dockerfile_optimized \
+       ./
+
+8. Используя команду docker history rbm-dkr-11:optimized --no-trunc изучите список слоёв в собранном контейнере. Сравните количество и размер с rbm-dkr-11:default
+docker history rbm-dkr-11:optimized --no-trunc
+
+9. Используя команду docker images сравните, размеры итоговых образов

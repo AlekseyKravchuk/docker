@@ -1,0 +1,30 @@
+# Представим, что у нас есть образ, в который добавлены два файла:
+    /usr/local/bin/daemon
+    /etc/daemon/config.yml
+# и переменная окружения:
+    DAEMON_VERSION=1.0.0
+
+# Теперь представим, как должен выглядеть Dockerfile для этого образа:
+FROM alpine:latest
+ENV DAEMON_VERSION 1.0.0
+COPY daemon /usr/local/bin/daemon
+COPY config.yml /etc/daemon/config.yml
+
+# Сборка такого образа будет выглядеть следующим образом:
+$ docker build -t test:latest .
+Sending build context to Docker daemon  3.072kB
+Step 1/4 : FROM alpine:latest
+ ---> 11cd0b38bc3c
+Step 2/4 : ENV DAEMON_VERSION 1.0.0
+ ---> Running in c3374710eccd
+Removing intermediate container c3374710eccd
+ ---> 8382abf6bc1c
+Step 3/4 : COPY daemon /usr/local/bin/daemon
+ ---> ac9fd5c52c26
+Step 4/4 : COPY config.yml /etc/daemon/config.yml
+ ---> 4ae8e33f705f
+Successfully built 4ae8e33f705f
+
+# Мы видим, что каждая директива создает свой слой и выдает его идентификатор, который можно проверить через docker inspect. 
+
+# docker history — выводит историю образа со всеми командами, которые выполнены в рамках сборки образа и все идентификаторы образов, созданные в ходе сборки образа.

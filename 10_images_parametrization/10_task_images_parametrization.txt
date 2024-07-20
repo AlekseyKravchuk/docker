@@ -10,8 +10,9 @@ scp ./Dockerfile user@188.166.9.91:/home/user/
 
 # После копирования Dockerfile на удаленном сервере запускаем:
 docker build \
-       -t nginx:rbm-dkr-10\
-       --build-arg REBRAINME=DиKR10 ./
+       -t nginx:rbm-dkr-10 \
+       --build-arg REBRAINME=DKR10 \
+       ./
 
 3) Выведите список образов на вашем хосте.
 docker images

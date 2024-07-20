@@ -1,0 +1,12 @@
+;; This buffer is for text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with C-x C-f and enter text in its buffer.
+cache:1
+real	0m6.881s
+user	0m0.142s
+sys	0m0.137s
+##############################
+cache:2
+real	0m0.645s
+user	0m0.113s
+sys	0m0.026s
+##############################

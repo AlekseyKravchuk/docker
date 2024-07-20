@@ -12,7 +12,7 @@ docker run -d --name web nginx
 #  здесь "web" - это имя контейнера, "bash" - имя команды
 docker exec -it web bash
 OUTPUT:
-kav@vak:~/docker_learn$ docker exec -it web bash
+user@pc:~/docker_learn$ docker exec -it web bash
 root@eb36acdfb0f5:/# 
 
 # Создадим в корне файл "12345678":

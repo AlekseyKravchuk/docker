@@ -1,0 +1,39 @@
+FROM ubuntu:20.04
+ENV testenv1=env1
+
+# Print current UID and GID
+CMD sh -c "echo 'Inside Container:' && echo 'User: $(whoami) UID: $(id -u) GID: $(id -g)'"
+
+# создадим пользователя
+RUN groupadd  --gid 2000 user \
+    && \
+    useradd --uid 2000 --gid 2000 \
+            --shell /bin/bash --create-home user
+
+# посмотрим состояние кэша apt до установки nginx
+RUN ls -lah /var/lib/apt/lists/
+
+RUN apt-get update -y && \
+    apt-get install nginx -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Повторно проверим состояние кэша apt
+RUN ls -lah /var/lib/apt/lists/
+
+# Очистим кзш
+RUN rm -rf /var/lib/apt/lists/*
+RUN ls -lah /var/lib/apt/lists/
+
+# Скопируем наш тестовый файл
+COPY --chown=user:user testfile ./
+
+# The USER instruction in a Dockerfile is a fundamental tool that determines which user will execute commands both during the image build process and when running the container.
+# By default, if no USER is specified, Docker will run commands as the root user, which can pose significant security risks. 
+USER user
+# USER user:user
+# USER 2000:2000
+
+# Print current UID and GID
+CMD sh -c "echo 'Inside Container after USER directive:' && echo 'User: $(whoami) UID: $(id -u) GID: $(id -g)'"
+
+CMD ["sleep infinity"]

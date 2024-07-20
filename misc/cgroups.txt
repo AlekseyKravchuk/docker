@@ -1,7 +1,7 @@
 cd /sys/fs/cgroup/
 ##################################################
 
-kav@bqp:/sys/fs/cgroup$ ls
+usr@pc:/sys/fs/cgroup$ ls
 cgroup.controllers      cgroup.procs            cpu.pressure           dev-hugepages.mount  io.cost.qos    machine.slice     memory.stat                    sys-fs-fuse-connections.mount  system.slice
 cgroup.max.depth        cgroup.stat             cpuset.cpus.effective  dev-mqueue.mount     io.pressure    memory.numa_stat  misc.capacity                  sys-kernel-config.mount        user.slice
 cgroup.max.descendants  cgroup.subtree_control  cpuset.mems.effective  init.scope           io.prio.class  memory.pressure   misc.current                   sys-kernel-debug.mount

@@ -1,0 +1,16 @@
+docker build \
+       -t test:secret \
+       -f ./Dockerfile_with_secret \
+       --build-arg SECRET=dontshowmeonwebinar \
+       ./
+
+# Смотрим историю создания образа "test:secret":
+docker history test:secret
+IMAGE          CREATED              CREATED BY                                      SIZE      COMMENT
+545e6d464426   About a minute ago   RUN |1 SECRET=dontshowmeonwebinar /bin/sh -c…   20B       buildkit.dockerfile.v0
+<missing>      About a minute ago   ARG SECRET                                      0B        buildkit.dockerfile.v0
+<missing>      3 weeks ago          /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B        
+<missing>      3 weeks ago          /bin/sh -c #(nop) ADD file:33ebe56b967747a97…   7.8MB     
+
+# Видим, что пароль виден, а значит скомпрометирован
+SECRET=dontshowmeonwebinar

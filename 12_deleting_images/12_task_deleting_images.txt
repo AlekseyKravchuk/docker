@@ -1,0 +1,57 @@
+Примечание:
+# Команда позволяет удалить в системе все неиспользуемые объекты: контейнеры, образы, Volumes и прочие сущности.
+docker system prune
+
+Задание:
+1) Загрузите себе образ nginx:stable-alpine, чтобы он был доступен локально.
+docker image pull nginx:stable-alpine
+
+2) Добавьте к загруженному образу новый тег rbm-dkr-12
+docker tag nginx:stable-alpine nginx:rbm-dkr-12
+
+3) Выведите список образов на вашем хосте — оба образа должны быть с одним ID.
+docker images
+
+4) Удалите образ nginx:stable-alpine.
+docker rmi nginx:stable-alpine
+
+5) Выведите список образов на вашем хосте — наш переименованный образ все еще должен быть в списке.
+docker images
+
+6) Еще раз выполните загрузку образа nginx:stable-alpine
+docker image pull nginx:stable-alpine
+
+7) Выведите список образов на вашем хосте и сохраните их в файл ( docker images | tee /home/user/images.txt ) — его ID остался прежним, хотя Docker и пришлось загрузить его, поскольку он не знает, что с таким ID у нас уже есть образ.
+docker images | tee /home/user/images.txt
+
+8) Удалите все имеющиеся образы nginx одной командой (любое удаление разрешено — через xargs, прямое указание тегов или другой метод).
+docker rmi --force $(docker images -a -q)
+
+9) Выведите список образов на вашем хосте.
+docker images
+
+10) Запустите контейнер со следующими параметрами:
+    - должен работать в фоне,
+    - образ — nginx:stable-alpine,
+    - имя — rbm-dkr-12.
+    
+docker run -d \
+           --name rbm-dkr-12 \
+           nginx:stable-alpine
+
+11) Попробуйте удалить образ nginx:stable-alpine без флагов.
+docker rmi nginx:stable-alpine
+
+12) Удалите его с флагом --force
+docker rmi --force nginx:stable-alpine
+
+13) Выведите список запущенных контейнеров — контейнер должен продолжать работать.
+docker ps
+
+14) Перезапустите контейнер.
+docker restart rbm-dkr-12
+
+15) Выведите список запущенных контейнеров — контейнер должен работать.
+docker ps
+
+16) Отправьте решение на проверку.

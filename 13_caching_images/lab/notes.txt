@@ -1,0 +1,99 @@
+# Почистим систему:
+docker system prune -a
+
+# Соберем образ, замерив время выполнения команды с помощью утилиты time:
+time docker build \
+            -t rbm:init \
+            ./
+
+docker images
+REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
+rbm          init      2cd76f8cbb51   27 seconds ago   232MB
+
+# Сводные данные по созданному образу:
+rbm:init
+2cd76f8cbb51
+
+# Получили такие временные значения:
+real	1m16,691s
+user	0m0,137s
+sys	0m0,113s
+
+# Отлично, теперь представим, что эти зависимости возникают каждый раз, когда требуется собрать образ.
+# Очень много времени тратится только на пакеты. Нерациональное использование времени.
+# В этом случае нам необходимо кэширование — возможность экономить время сборки новых образов на основе тех образов, которые мы уже собирали.
+# Действительно, зачем нам заново загружать пакеты, если они уже есть в ранее собранном образе?
+# Для того, чтобы не повторять действия, которые занимают много времени, можно воспользоваться старым образом как кэшем и тогда не нужно будет тратить время на сборку новых образов.
+# Для того, чтобы использовать кэш, нужно передать параметр --cache-from для команды docker build, передав ей имя образа.
+# Это можно сделать по имени образа или его ID.
+
+time docker build \
+            --cache-from rbm:init \
+            -t rbm:from_rbm_init_1 \
+            ./
+
+docker images
+REPOSITORY   TAG               IMAGE ID       CREATED         SIZE
+rbm          from_rbm_init_1   2cd76f8cbb51   3 minutes ago   232MB
+rbm          init              2cd76f8cbb51   3 minutes ago   232MB
+
+# Сводные данные по созданному образу:
+rbm:from_rbm_init_1
+2cd76f8cbb51
+
+# EMACS: Delete spaces and tabs around point (delete-horizontal-space).
+# M-\
+
+# EMACS: Delete spaces and tabs around point, leaving one space (just-one-space).
+# M-SPC
+
+# В этом случае временные затраты будут незначительными (сборка образа заняла менее секунды).
+real	0m0,806s
+user	0m0,064s
+sys	0m0,034s
+
+# Как мы видим, ID слоев в первой и второй сборке у нас абсолютно одинаковые, мы ничего не меняли.
+# А если воспользуемся docker images, то увидим, что и нового образа в результате сборки мы не создали!
+
+# Теперь поменяем файл config.yml и повторим сборку с кэшем:
+echo "some text that modifies initial state of config" > config.yml
+
+time docker build \
+            --cache-from rbm:init \
+            -t rbm:build_from_init_modified_config \
+            ./
+
+docker images
+REPOSITORY   TAG                               IMAGE ID       CREATED          SIZE
+rbm          build_from_init_modified_config   826f1620e53c   14 seconds ago   232MB
+rbm          from_rbm_init_1                   2cd76f8cbb51   12 minutes ago   232MB
+rbm          init                              2cd76f8cbb51   12 minutes ago   232MB
+
+# Пойдем дальше: поменяем файл daemon и посмотрим, что будет при использовании кэша из самого первого образа:
+echo "modify daemon file" > daemon
+
+time docker build \
+            --cache-from rbm:init \
+            -t rbm:build_from_init_modified_daemon \
+            ./
+
+docker images
+REPOSITORY   TAG                               IMAGE ID       CREATED          SIZE
+rbm          build_from_init_modified_daemon   8aac7a7f3173   7 seconds ago    232MB
+rbm          build_from_init_modified_config   826f1620e53c   2 minutes ago    232MB
+rbm          from_rbm_init_1                   2cd76f8cbb51   15 minutes ago   232MB
+rbm          init                              2cd76f8cbb51   15 minutes ago   232MB
+
+# Как мы видим, теперь поменялись два слоя и у нас получился новый образ!
+
+# Хорошо, теперь посмотрим, что будет, если мы соберем образ, используя в роли кэша второй образ, где изменялся файл config.yml - будет ли на этом шаге использоваться кэш?
+time docker build \
+            --cache-from rbm:build_from_init_modified_config \
+            -t rbm:build_from_init_modified_daemon_2 \
+            ./
+
+# Зачастую требуется собирать образ без кэширования:
+time docker build \
+            --no-cache \
+            -t rbm:no_cache_used \
+            ./

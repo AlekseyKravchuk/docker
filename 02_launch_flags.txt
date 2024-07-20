@@ -99,8 +99,8 @@ docker images | grep -e "nginx" -e "ubuntu" | awk 'NR>1 {print $3}'
 # Вывести идентификаторы интересующих нас образов ("ubuntu:latest" и "ubuntu:16.04") ЧЕРЕЗ пробел:
 docker images | grep -e "nginx" -e "ubuntu" | awk 'NR>1 {print $3}' | tr '\n' ' '; echo
 
-# Выводим список умующихся контейнеров (со статусом "exited"):
-kav@vak:~/docker_learn$ docker ps -a
+# Выводим список имеющихся контейнеров (со статусом "exited"):
+user@vak:~/docker_learn$ docker ps -a
 CONTAINER ID   IMAGE          COMMAND       CREATED         STATUS                     PORTS     NAMES
 c30b13519d5c   ubuntu         "sleep 30"    3 minutes ago   Exited (0) 3 minutes ago             test
 a4fe140b8cc0   ubuntu:16.04   "/bin/bash"   3 hours ago     Exited (0) 3 hours ago               my_ubuntu_16.04
