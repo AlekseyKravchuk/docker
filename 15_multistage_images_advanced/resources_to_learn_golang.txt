@@ -1,0 +1,42 @@
+https://gobyexample.com
+https://www.coursera.org/learn/golang-functions-methods
+Pluralsight: Go Fundamentals
+
+    The Go Programming Language" by Alan A. Donovan and Brian W. Kernighan
+        Одно из лучших изданий для глубокого изучения Go. Подробно рассматриваются как основы, так и продвинутые аспекты языка.
+
+    "Go in Action" by William Kennedy, with Brian Ketelsen and Erik St. Martin
+        Книга, которая ориентирована на практическое применение Go, включая использование в DevOps.
+
+    "Go Programming Language" by John Arundel and Justin Domingus
+        Отличное руководство для DevOps-инженеров, покрывающее базовые и продвинутые аспекты Go.
+
+Видеоуроки и YouTube-каналы
+
+    Go Programming Language - YouTube Playlist by Derek Banas
+        Отличная серия видеоуроков, которые объясняют основы Go и примеры кода.
+
+    JustForFunc: Programming in Go - YouTube Channel
+        Канал с множеством видео по Go, включая примеры кода и объяснения.
+
+    GoLang Cafe - YouTube Channel
+        Канал, специализирующийся на Go и связанном с DevOps. Имеет полезные уроки и примеры кода.
+
+    Tech with Tim - Go Programming for Beginners
+        Плейлист, покрывающий основы Go программирования.
+
+    Go for DevOps - YouTube Video by Dave Cheney
+        Видео, посвященное использованию Go в задачах DevOps. Рассматриваются примеры и best practices.
+
+Ресурсы по DevOps и Go
+
+    DevOps with Go
+        Статья, объясняющая, как Go может использоваться в DevOps.
+
+    Dockerizing Go Applications
+        Официальное руководство по Docker-контейнеризации Go-приложений.
+
+    GitOps with Go
+        Рассматривает использование Go для создания инструментов для GitOps.
+
+Эти ресурсы охватывают как основы Go, так и его применение в DevOps, что поможет вам развить навыки, необходимые для успешного использования Go в этой области.

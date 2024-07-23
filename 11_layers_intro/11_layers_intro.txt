@@ -11,7 +11,14 @@ COPY daemon /usr/local/bin/daemon
 COPY config.yml /etc/daemon/config.yml
 
 # Сборка такого образа будет выглядеть следующим образом:
-$ docker build -t test:latest .
+$ docker build \
+         -t test:latest \
+         ./
+
+`-t test:latest`: Задает тег "test:latest" для создаваемого Docker-образа.
+`./`            : Указывает текущий каталог как контекст сборки, в котором находится Dockerfile.
+
+
 Sending build context to Docker daemon  3.072kB
 Step 1/4 : FROM alpine:latest
  ---> 11cd0b38bc3c
