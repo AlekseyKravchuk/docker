@@ -1,0 +1,54 @@
+Продолжим осваивать тему Multi-stage.
+Существует техника с довольно ограниченным сценарием использования, которая позволяет вытащить образ посередине как отдельный.
+Если мы рассмотрим результат нашего предыдущего задания, то увидим, что в ходе сборки у нас появилось несколько образов: каждый FROM породил новый образ - это видно через docker images.
+
+Однако есть сценарии, при которых нам необходимо получить образ именно из середины.
+Для этого у docker build есть еще один флаг - --target, в него передается имя подобраза, который требуется получить.
+
+Допустим, у нас есть такой Dockerfile:
+#################### Dockerfile ####################
+FROM alpine:latest AS build
+ARG test
+ENV DAEMON_VERSION 1.0.0
+RUN echo $test > tmpfile
+
+FROM alpine:latest
+COPY --from=build tmpfile tmpfile
+####################################################
+
+Сборка в общем случае будет выглядеть следующим образом:
+$ docker build .
+Sending build context to Docker daemon  2.048kB
+Step 1/6 : FROM alpine:latest AS build
+ ---> 965ea09ff2eb
+Step 2/6 : ARG test
+ ---> Using cache
+ ---> 2b3c376d3b77
+Step 3/6 : ENV DAEMON_VERSION 1.0.0
+ ---> Using cache
+ ---> 1e258bed828e
+Step 4/6 : RUN echo $test > tmpfile
+ ---> Using cache
+ ---> 91cecca34cbc
+Step 5/6 : FROM alpine:latest
+ ---> 965ea09ff2eb
+Step 6/6 : COPY --from=build tmpfile tmpfile
+ ---> 09fd373940c3
+Successfully built 09fd373940c3
+
+#####################################################
+Но если нам требуется только build образ, то можно его получить так:
+$ docker build --target build .
+Sending build context to Docker daemon  2.048kB
+Step 1/4 : FROM alpine:latest AS build
+ ---> 965ea09ff2eb
+Step 2/4 : ARG test
+ ---> Using cache
+ ---> 2b3c376d3b77
+Step 3/4 : ENV DAEMON_VERSION 1.0.0
+ ---> Using cache
+ ---> 1e258bed828e
+Step 4/4 : RUN echo $test > tmpfile
+ ---> Using cache
+ ---> 91cecca34cbc
+Successfully built 91cecca34cbc
