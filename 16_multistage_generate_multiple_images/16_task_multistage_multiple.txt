@@ -1,0 +1,13 @@
+Задание:
+
+# Склонируйте на предоставленную машину содержимое из официального репозитория grafana из ветки с именем "v6.3.x".
+git clone --branch v6.3.x --single-branch https://github.com/grafana/grafana.git
+
+# Добавьте в существующий /home/user/grafana/Dockerfile еще один образ на базе nginx:alpine, в который копируется скомпилированная на предыдущем шаге статика (public):
+scp /home/kav/docker_learn/16_multistage_generate_multiple_images \
+    user@64.227.68.170:/home/user/Dockerfile
+
+
+Соберите отдельно образ с nginx, отдельно с приложением. Выставьте им теги grafana:app и grafana:static.
+Выведите список образов.
+Отправьте задание на проверку
